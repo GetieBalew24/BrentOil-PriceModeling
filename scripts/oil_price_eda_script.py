@@ -74,3 +74,16 @@ class BrentOilPricesEDA:
         end_time = datetime.now()
         logging.info(f"Date formatting completed in {end_time - start_time}.")
         return self.data
+    def describe_data(self):
+        """
+        Provides descriptive statistics of the data.
+        Returns
+        -------
+        pd.DataFrame
+            Summary statistics of the data.
+        """
+        if self.data is None:
+            logging.warning("Data not loaded. Please load data before calling describe_data.")
+            return None
+        logging.info("Generating descriptive statistics.")
+        return self.data.describe().round(2)
