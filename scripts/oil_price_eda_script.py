@@ -121,3 +121,23 @@ class BrentOilPricesEDA:
         decomposition.plot()
         plt.suptitle("Seasonal Decomposition of Brent Oil Prices", fontsize=10)
         plt.show()
+    def plot_acf_pacf(self, column='Price', lags=30):
+        """
+        Plots the ACF and PACF for the specified column.
+        
+        Parameters
+        ----------
+        column : str, optional
+            The column name for which ACF and PACF are to be plotted (default is 'Price').
+        lags : int, optional
+            The number of lags to include in the ACF and PACF plots (default is 30).
+        """
+        if self.data is None:
+            logging.warning("Data not loaded. Please load data before calling plot_acf_pacf.")
+            return
+        
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4))
+        plot_acf(self.data[column], lags=lags, ax=ax1)
+        plot_pacf(self.data[column], lags=lags, ax=ax2)
+        plt.show()
+        logging.info("ACF and PACF plots generated successfully.")
