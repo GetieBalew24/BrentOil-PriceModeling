@@ -87,3 +87,18 @@ class BrentOilPricesEDA:
             return None
         logging.info("Generating descriptive statistics.")
         return self.data.describe().round(2)
+    def plot_time_series(self):
+        """
+        Plots the time series of Brent oil prices.
+        """
+        if self.data is None:
+            logging.warning("Data not loaded. Please load data before calling plot_time_series.")
+            return
+        
+        plt.figure(figsize=(14, 6))
+        plt.plot(self.data.index, self.data['Price'], color='blue')
+        plt.title("Brent Oil Prices Over Time")
+        plt.xlabel("Date")
+        plt.ylabel("Price (USD)")
+        plt.show()
+        logging.info("Time series plot generated successfully.")
