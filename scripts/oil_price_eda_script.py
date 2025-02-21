@@ -220,3 +220,56 @@ class BrentOilPricesEDA:
             plt.show()
         else:
             logging.info("Data is stationary; proceed without differencing.")
+    def plot_cusum(self, column_name='Price'):
+        """
+        Calculate and plot the CUSUM values for the specified column.
+        """
+        # Calculate the CUSUM values
+        cusum_values = np.cumsum(self.data[column_name] - self.data[column_name].mean())
+        
+        # Plot the CUSUM values
+        plt.figure(figsize=(14, 7))
+        plt.plot(self.data.index, cusum_values, label='CUSUM', color='blue')
+        plt.axhline(y=0, color='red', linestyle='--')
+        plt.xlabel('Date')
+        plt.ylabel('CUSUM Value')
+        plt.title('CUSUM Analysis')
+        plt.legend()
+        plt.show()
+    def change_point_analysis(self):
+        """
+        Performs change point analysis on the 'Price' data using the ruptures library.
+        Plots the Brent oil prices and highlights detected change points.
+        """
+        if self.data is None:
+            logging.warning("Data not loaded. Please load data before calling change_point_analysis.")
+            return
+        
+        logging.info("Performing change point analysis.")
+        
+        # Prepare the price data as an array
+        price_series = self.data['Price'].values
+
+        # Define the model as 'rbf' for kernel-based change point detection
+        model = "rbf"
+        algo = rpt.Pelt(model=model).fit(price_series)
+
+        # Increase the penalty to reduce the number of change points
+        change_points = algo.predict(pen=15)  # we can adjust the penalty to find significant changes
+
+        # Plotting the results
+        plt.figure(figsize=(12, 6))
+        plt.plot(self.data.index, price_series, label="Brent Oil Prices", color='blue')
+
+        # Plot each change point, with only one label in the legend
+        for i, cp in enumerate(change_points):
+            if i == 0:  # Add label only for the first change point
+                plt.axvline(self.data.index[cp - 1], color='red', linestyle='--', label="Change Point")
+            else:
+                plt.axvline(self.data.index[cp - 1], color='red', linestyle='--')
+
+        plt.legend()
+        plt.title("Change Point Analysis on Brent Oil Prices")
+        plt.xlabel("Date")
+        plt.ylabel("Price")
+        plt.show()
