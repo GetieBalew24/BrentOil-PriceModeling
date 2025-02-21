@@ -102,3 +102,22 @@ class BrentOilPricesEDA:
         plt.ylabel("Price (USD)")
         plt.show()
         logging.info("Time series plot generated successfully.")
+    def seasonal_decomposition(self):
+        """
+        Decomposes the time series of Brent oil prices into trend, seasonal, and residual components
+        using additive decomposition and plots the results.
+        """
+        if self.data is None:
+            logging.warning("Data not loaded. Please load data before calling seasonal_decomposition.")
+            return
+        
+        logging.info("Performing seasonal decomposition.")
+
+        # Decompose the time series to analyze trend and seasonality
+        decomposition = seasonal_decompose(self.data['Price'], model='additive', period=30)
+        
+        # Plot the decomposition
+        plt.figure(figsize=(14, 10))
+        decomposition.plot()
+        plt.suptitle("Seasonal Decomposition of Brent Oil Prices", fontsize=10)
+        plt.show()
