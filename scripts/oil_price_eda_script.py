@@ -192,3 +192,31 @@ class BrentOilPricesEDA:
         plt.show()
         
         logging.info("Histogram plot generated successfully with statistics and colormap.")
+    def check_stationarity(self):
+        """
+        Checks the stationarity of the 'Price' column using the Augmented Dickey-Fuller (ADF) test.
+        
+        If the series is non-stationary (p > 0.05), applies first differencing and plots the differenced series.
+        """
+        if self.data is None:
+            logging.warning("Data not loaded. Please load data before calling check_stationarity.")
+            return
+        
+        logging.info("Performing Augmented Dickey-Fuller test for stationarity.")
+        result = adfuller(self.data['Price'])
+        logging.info(f"ADF Statistic: {result[0]}")
+        logging.info(f"p-value: {result[1]}")
+        
+        if result[1] > 0.05:
+            logging.info("Data is non-stationary; applying first differencing.")
+            self.data['price_diff'] = self.data['Price'].diff()
+
+            # Drop the NaN value resulting from differencing
+            plt.figure(figsize=(14, 6))
+            plt.plot(self.data.index[1:], self.data['price_diff'].dropna(), color='green')  # Use dropna() to align lengths
+            plt.title('Differenced Brent Oil Prices')
+            plt.xlabel("Date")
+            plt.ylabel("Differenced Price")
+            plt.show()
+        else:
+            logging.info("Data is stationary; proceed without differencing.")
