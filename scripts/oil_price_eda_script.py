@@ -141,3 +141,54 @@ class BrentOilPricesEDA:
         plot_pacf(self.data[column], lags=lags, ax=ax2)
         plt.show()
         logging.info("ACF and PACF plots generated successfully.")
+
+    def plot_histogram(self, column='Price', cmap='viridis'):
+        """
+        Plots a histogram for the specified column with a colormap and
+        includes vertical lines for mean, median, minimum, and maximum values.
+
+        Parameters
+        ----------
+        column : str, optional
+            The column name to plot (default is 'Price').
+        cmap : str, optional
+            The colormap to use for the histogram (default is 'viridis').
+        """
+        if self.data is None:
+            logging.warning("Data not loaded. Please load data before calling plot_histogram.")
+            return
+
+        plt.figure(figsize=(10, 6))
+
+        # Generate histogram values
+        hist_values, bins, patches = plt.hist(self.data[column], bins=20, edgecolor='black', alpha=0.7)
+
+        # Apply colormap to each bin
+        cmap = plt.get_cmap(cmap)
+        norm = plt.Normalize(vmin=min(bins), vmax=max(bins))
+        
+        for patch, bin_value in zip(patches, bins[:-1]):  # Exclude last bin since bins has one extra element
+            patch.set_facecolor(cmap(norm(bin_value)))
+
+        plt.xlabel(column)
+        plt.ylabel('Frequency')
+        plt.title(f'Histogram for {column}')
+
+        # Calculate statistics
+        mean_value = self.data[column].mean()
+        median_value = self.data[column].median()
+        min_value = self.data[column].min()
+        max_value = self.data[column].max()
+
+        # Add vertical lines for mean, median, min, and max
+        plt.axvline(mean_value, color='red', linestyle='--', label=f'Mean: {mean_value:.2f}')
+        plt.axvline(median_value, color='yellow', linestyle='--', label=f'Median: {median_value:.2f}')
+        plt.axvline(min_value, color='green', linestyle='--', label=f'Min: {min_value:.2f}')
+        plt.axvline(max_value, color='blue', linestyle='--', label=f'Max: {max_value:.2f}')
+
+        # Adding a legend to describe the lines
+        plt.legend()
+        plt.grid(axis='y', alpha=0.75)  # Add grid for better readability
+        plt.show()
+        
+        logging.info("Histogram plot generated successfully with statistics and colormap.")
