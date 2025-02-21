@@ -45,3 +45,32 @@ class BrentOilPricesEDA:
         end_time = datetime.now()
         logging.info(f"Data loading completed in {end_time - start_time}.")
         return self.data
+    def format_date(self):
+        """
+        Converts the 'Date' column to datetime, handles invalid dates, and sets 'Date' as the index.
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with 'Date' as the index.
+        """
+        if self.data is None:
+            logging.warning("Data not loaded. Please load data before calling format_date.")
+            return None
+        
+        start_time = datetime.now()
+        # Convert Date column to datetime format with error handling
+        self.data['Date'] = pd.to_datetime(self.data['Date'], infer_datetime_format=True, errors='coerce')
+        
+        # Drop rows with invalid dates
+        invalid_dates = self.data[self.data['Date'].isna()]
+        if not invalid_dates.empty:
+            logging.warning(f"Found {len(invalid_dates)} rows with invalid dates. Dropping these rows.")
+            self.data = self.data.dropna(subset=['Date'])
+        
+        # Sort by date and reset index
+        self.data = self.data.sort_values('Date').reset_index(drop=True)
+        self.data.set_index('Date', inplace=True)
+        
+        end_time = datetime.now()
+        logging.info(f"Date formatting completed in {end_time - start_time}.")
+        return self.data
