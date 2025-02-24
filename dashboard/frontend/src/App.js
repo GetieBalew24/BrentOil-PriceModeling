@@ -11,6 +11,7 @@ function App() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [dateFilteredData, setDateFilteredData] = useState([]);
+    const [activeSection, setActiveSection] = useState('prices'); // State to track active section
 
     // Sample performance metrics data
     const modelMetrics = [
@@ -21,22 +22,24 @@ function App() {
     ];
 
     useEffect(() => {
-        fetch('http://127.0.0.1:5000/api/prices')
-            .then(response => response.json())
-            .then(data => {
-                setPriceData(data);
-                setFilteredPriceData(data);
-            })
-            .catch(error => console.error('Error fetching price data:', error));
-
-        fetch('http://127.0.0.1:5000/api/events')
-            .then(response => response.json())
-            .then(data => {
-                setEventData(data);
-                generateEventColors(data); // Generate colors based on event data
-            })
-            .catch(error => console.error('Error fetching event data:', error));
-    }, []);
+        if (activeSection === 'prices') {
+            fetch('http://127.0.0.1:5000/api/prices')
+                .then(response => response.json())
+                .then(data => {
+                    setPriceData(data);
+                    setFilteredPriceData(data);
+                })
+                .catch(error => console.error('Error fetching price data:', error));
+        } else if (activeSection === 'events') {
+            fetch('http://127.0.0.1:5000/api/events')
+                .then(response => response.json())
+                .then(data => {
+                    setEventData(data);
+                    generateEventColors(data); // Generate colors based on event data
+                })
+                .catch(error => console.error('Error fetching event data:', error));
+        }
+    }, [activeSection]); // Fetch data when activeSection changes
 
     const generateEventColors = (events) => {
         const colors = {};
@@ -75,11 +78,25 @@ function App() {
         setDateFilteredData(filteredData);
     };
 
+    const handleMenuClick = (section) => {
+        setActiveSection(section); // Update the active section
+    };
+
     return (
         <div style={{ backgroundColor: 'black', minHeight: '100vh', color: 'white' }}>
-            <h1 style={{ textAlign: 'center', margin: '20px 0' }}>Brent Oil Prices</h1>
+            {/* Menu Bar */}
+            <div className="menu-bar">
+                <h1>Brent Oil Prices Dashboard</h1>
+                <nav>
+                    <ul>
+                        <li><a href="#prices" onClick={() => handleMenuClick('prices')}>Prices</a></li>
+                        <li><a href="#events" onClick={() => handleMenuClick('events')}>Events</a></li>
+                        <li><a href="#metrics" onClick={() => handleMenuClick('metrics')}>Metrics</a></li>
+                    </ul>
+                </nav>
+            </div>
 
-            {priceData.length > 0 ? (
+            {activeSection === 'prices' && priceData.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     {/* Main Price Line Chart with Event Highlights */}
                     <ResponsiveContainer width="70%" height={400}>
@@ -192,71 +209,69 @@ function App() {
                             </ResponsiveContainer>
                         </div>
                     </div>
+                </div>
+            ) : activeSection === 'events' && eventData.length > 0 ? (
+                <div style={{ backgroundColor: '#333', width: '70%', marginTop: '20px', padding: '20px', borderRadius: '8px', margin: '0 auto' }}>
+                    <h3 style={{ textAlign: 'center' }}>Event Highlights</h3>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={priceData}>
+                            <XAxis dataKey="Date" tick={{ angle: -45, fill: 'white' }} textAnchor="end" />
+                            <YAxis tick={{ fill: 'white' }} padding={{ top: 20, bottom: 20 }} domain={['auto', 'auto']} />
+                            <Tooltip />
+                            <CartesianGrid strokeDasharray="3 3" stroke="gray" />
+                            <Line type="monotone" dataKey="Price" stroke="#ff7300" strokeWidth={2} dot={false} />
 
-                    {/* New Row for Event Highlights with Line Chart */}
-                    <div style={{ backgroundColor: '#333', width: '70%', marginTop: '20px', padding: '20px', borderRadius: '8px' }}>
-                        <h3 style={{ textAlign: 'center' }}>Event Highlights</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <LineChart data={priceData}>
-                                <XAxis dataKey="Date" tick={{ angle: -45, fill: 'white' }} textAnchor="end" />
-                                <YAxis tick={{ fill: 'white' }} padding={{ top: 20, bottom: 20 }} domain={['auto', 'auto']} />
-                                <Tooltip />
-                                <CartesianGrid strokeDasharray="3 3" stroke="gray" />
-                                <Line type="monotone" dataKey="Price" stroke="#ff7300" strokeWidth={2} dot={false} />
+                            {/* Event Highlighters */}
+                            {eventData.map((event, index) => (
+                                <Line
+                                    key={index}
+                                    type="monotone"
+                                    dataKey="Price"
+                                    stroke={eventColors[event.event_type] || '#ffffff'} // Use the dynamic color
+                                    strokeWidth={2}
+                                    dot={false}
+                                    isAnimationActive={false}
+                                    data={[
+                                        { Date: event.Date, Price: 0 }, 
+                                        { Date: event.Date, Price: Math.max(...priceData.map(d => d.Price)) } // Draw a vertical line
+                                    ]}
+                                />
+                            ))}
+                        </LineChart>
+                    </ResponsiveContainer>
 
-                                {/* Event Highlighters */}
-                                {eventData.map((event, index) => (
-                                    <Line
-                                        key={index}
-                                        type="monotone"
-                                        dataKey="Price"
-                                        stroke={eventColors[event.event_type] || '#ffffff'} // Use the dynamic color
-                                        strokeWidth={2}
-                                        dot={false}
-                                        isAnimationActive={false}
-                                        data={[
-                                            { Date: event.Date, Price: 0 }, 
-                                            { Date: event.Date, Price: Math.max(...priceData.map(d => d.Price)) } // Draw a vertical line
-                                        ]}
-                                    />
-                                ))}
-                            </LineChart>
-                        </ResponsiveContainer>
-
-                        {/* Legend for Event Types */}
-                        <div style={{ textAlign: 'center', marginTop: '10px' }}>
-                            <h4 style={{ color: 'white' }}>Event Legend</h4>
-                            <div style={{ display: 'flex', justifyContent: 'center' }}>
-                                {Object.entries(eventColors).map(([eventType, color]) => (
-                                    <div key={eventType} style={{ display: 'flex', alignItems: 'center', margin: '0 10px' }}>
-                                        <div style={{ width: '20px', height: '20px', backgroundColor: color, marginRight: '5px' }}></div>
-                                        <span style={{ color: 'white' }}>{eventType}</span>
-                                    </div>
-                                ))}
-                            </div>
+                    {/* Legend for Event Types */}
+                    <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                        <h4 style={{ color: 'white' }}>Event Legend</h4>
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            {Object.entries(eventColors).map(([eventType, color]) => (
+                                <div key={eventType} style={{ display: 'flex', alignItems: 'center', margin: '0 10px' }}>
+                                    <div style={{ width: '20px', height: '20px', backgroundColor: color, marginRight: '5px' }}></div>
+                                    <span style={{ color: 'white' }}>{eventType}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-
-                    {/* Metrics Display Section */}
-                    <div style={{ display: 'flex', justifyContent: 'center', width: '70%', marginTop: '20px' }}>
-                        <div style={{ backgroundColor: '#333', flex: '1', margin: '0 10px', padding: '20px', borderRadius: '8px' }}>
-                            <h3 style={{ textAlign: 'center' }}>Model Performance Metrics</h3>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={modelMetrics}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="gray" />
-                                    <XAxis dataKey="Model_Name" stroke="#fff" label={{ value: "Model Name", position: "bottom", offset: 0 }} />
-                                    <YAxis stroke="#fff" label={{ value: "Error Metrics", angle: -90, position: 'insideLeft', offset: 0 }} />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Bar dataKey="MSE" fill="#ff7300" name="Mean Squared Error">
-                                        <LabelList dataKey="MSE" position="top" fill="#fff" />
-                                    </Bar>
-                                    <Bar dataKey="MAE" fill="#00c49f" name="Mean Absolute Error">
-                                        <LabelList dataKey="MAE" position="top" fill="#fff" />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
+                </div>
+            ) : activeSection === 'metrics' ? (
+                <div style={{ display: 'flex', justifyContent: 'center', width: '70%', marginTop: '20px', margin: '0 auto' }}>
+                    <div style={{ backgroundColor: '#333', flex: '1', margin: '0 10px', padding: '20px', borderRadius: '8px' }}>
+                        <h3 style={{ textAlign: 'center' }}>Model Performance Metrics</h3>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={modelMetrics}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="gray" />
+                                <XAxis dataKey="Model_Name" stroke="#fff" label={{ value: "Model Name", position: "bottom", offset: 0 }} />
+                                <YAxis stroke="#fff" label={{ value: "Error Metrics", angle: -90, position: 'insideLeft', offset: 0 }} />
+                                <Tooltip />
+                                <Legend />
+                                <Bar dataKey="MSE" fill="#ff7300" name="Mean Squared Error">
+                                    <LabelList dataKey="MSE" position="top" fill="#fff" />
+                                </Bar>
+                                <Bar dataKey="MAE" fill="#00c49f" name="Mean Absolute Error">
+                                    <LabelList dataKey="MAE" position="top" fill="#fff" />
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
             ) : (
