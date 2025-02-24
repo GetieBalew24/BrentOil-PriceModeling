@@ -77,4 +77,44 @@ class WorldDataAnalysis:
             print("Merged data saved to 'merged_data.csv'.")
         else:
             print("Data not prepared. Run resample_to_daily() and load_oil_prices_from_csv() first.")
+    def calculate_correlations(self):
+        """Calculate and display the correlation matrix."""
+        if hasattr(self, 'merged_data'):
+            correlation_matrix = self.merged_data.corr()
+            plt.figure(figsize=(8, 6))
+            sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", center=0)
+            plt.title("Correlation Matrix of Global GDP, Inflation, Unemployment, Exchange Rate, and Oil Price (Daily Data)")
+            plt.show()
+        else:
+            print("Merged data not available. Run merge_data() first.")
+    def specific_correlation(self, indicator1, indicator2):
+        """Calculate the correlation between two specific indicators."""
+        if hasattr(self, 'merged_data') and indicator1 in self.merged_data.columns and indicator2 in self.merged_data.columns:
+            correlation = self.merged_data[indicator1].corr(self.merged_data[indicator2])
+            print(f"Correlation between {indicator1} and {indicator2}: {correlation}")
+        else:
+            print(f"Indicators not available in merged data. Available indicators are: {list(self.merged_data.columns)}")
+    def plot_oil_vs_indicator(self, data, indicator, oil_price_column='Price'):
+        """
+        Plots Brent oil prices against a given economic indicator.
 
+        Parameters:
+        - data (pd.DataFrame): DataFrame containing oil prices and economic indicators.
+        - indicator (str): Column name of the economic indicator to plot.
+        - oil_price_column (str): Column name of the oil price data. Default is 'Price'.
+        """
+        fig, ax1 = plt.subplots(figsize=(12, 6))
+        
+        ax1.plot(data.index, data[oil_price_column], color='blue', label='Brent Oil Price')
+        ax1.set_ylabel('Brent Oil Price (USD)', color='blue')
+        ax1.tick_params(axis='y', labelcolor='blue')
+        ax1.set_xlabel('Time')
+
+        ax2 = ax1.twinx()
+        ax2.plot(data.index, data[indicator], color='orange', linestyle='--', label=indicator)
+        ax2.set_ylabel(indicator, color='orange')
+        ax2.tick_params(axis='y', labelcolor='orange')
+
+        fig.tight_layout()
+        plt.title(f"Brent Oil Price and {indicator} Over Time")
+        plt.show()
