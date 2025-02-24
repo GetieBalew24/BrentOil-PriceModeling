@@ -64,3 +64,17 @@ class WorldDataAnalysis:
             print(self.oil_prices.head())  # Display the first few rows for inspection
         except Exception as e:
             print("Error loading oil prices from CSV:", e)
+    def merge_data(self):
+        """Merge daily world data with daily oil prices, keeping only the dates available in oil prices."""
+        if self.world_data_daily is not None and hasattr(self, 'oil_prices'):
+            # Perform a right join to retain only dates from oil prices data
+            self.merged_data = self.world_data_daily.merge(self.oil_prices, left_index=True, right_index=True, how="right")
+            print("Data merged successfully, maintaining only dates from oil prices data.")
+            print(self.merged_data.head())  # Display the first few rows for inspection
+            
+            # Save the merged data to CSV
+            self.merged_data.to_csv('../data/merged_data.csv', index=True)
+            print("Merged data saved to 'merged_data.csv'.")
+        else:
+            print("Data not prepared. Run resample_to_daily() and load_oil_prices_from_csv() first.")
+
