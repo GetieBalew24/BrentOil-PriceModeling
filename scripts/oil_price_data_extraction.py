@@ -47,3 +47,20 @@ class WorldDataAnalysis:
 
         except Exception as e:
             print("Error fetching world data:", e)
+    def resample_to_daily(self):
+        """Resample annual world data to daily frequency and forward-fill."""
+        if self.world_data is not None:
+            self.world_data.set_index('date', inplace=True)  # Set date as index for resampling
+            self.world_data_daily = self.world_data.resample('D').ffill()
+            print("World data resampled to daily frequency.")
+            print(self.world_data_daily.head())  # Display the first few rows for inspection
+        else:
+            print("World data not loaded. Run fetch_world_data() first.")
+    def load_oil_prices_from_csv(self, file_path):
+        """Load daily oil price data from a CSV file."""
+        try:
+            self.oil_prices = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')
+            print("Oil prices loaded successfully.")
+            print(self.oil_prices.head())  # Display the first few rows for inspection
+        except Exception as e:
+            print("Error loading oil prices from CSV:", e)
